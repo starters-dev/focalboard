@@ -1,0 +1,7 @@
+.DS_Store
+appdata/
+.*env*
+acme/
+api/
+website/
+backend/

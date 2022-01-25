@@ -1,0 +1,59 @@
+version: "3.7"
+
+services:
+  proxy:
+    image: traefik:latest
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=digitalocean"
+      - "--certificatesresolvers.mydnschallenge.acme.email=dev@batyr.io"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/acme.json"
+    environment:
+      - DO_AUTH_TOKEN=${DO_AUTH_TOKEN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "6969:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./acme/acme.json:/acme.json
+
+  focalboard:
+    image: mattermost/focalboard
+    restart: always
+    depends_on:
+      - focalboard-db
+    expose:
+      - 8000
+    environment:
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - VIRTUAL_PORT=${VIRTUAL_PORT}
+      - VIRTUAL_PROTO=${VIRTUAL_PROTO}
+    volumes:
+      - "./config.json:/opt/focalboard/config.json"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.boards.rule=Host(`boards.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.boards.entryPoints=http"
+      - "traefik.http.routers.boards.middlewares=https_redirect"
+      - "traefik.http.middlewares.https_redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.boards_tls.rule=Host(`boards.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.boards_tls.entryPoints=https"
+      - "traefik.http.routers.boards_tls.tls.certresolver=mydnschallenge"
+
+  focalboard-db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    volumes:
+      - ./appdata/postgres:/var/lib/postgresql/data
+    labels:
+      - "traefik.enable=false"

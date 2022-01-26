@@ -1,6 +1,8 @@
-# Focalboard
+# Focalboard (Mattermost Boards) Self-Hosted
 
-This repo is used to configure a Mattermost Focalboard in the Cloud (DigitalOcean.com)
+[Focalboard](https://www.focalboard.com) is an open source, self-hosted alternative to Trello, Notion, and Asana.
+
+This repo is used to configure a Focalboard (Mattermost Boards) in the Cloud (DigitalOcean.com)
 
 1. Connect to the remote droplet
 
@@ -39,7 +41,7 @@ DB_USER=boards_admin
 DB_PASS=BoArds_PassWORD
 ```
 
-3. Run `build` script
+4. Run `build` script
 
 ```
 > bash scripts/build.sh
